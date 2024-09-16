@@ -7,3 +7,4 @@ import ctypes
 
 class Board:
   def __int__(self, size = 6):
+    pass
