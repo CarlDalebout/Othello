@@ -41,6 +41,8 @@ class Board:
     ret += '+' + '-+'*self.__size + '\n'
     return ret
 
+  def getmovesWhite():
+    pass
 
   def playBlack(self, row = None, col = None):
     index = self.__size*row + col                                      # creating the index to manipulate based on the row and col
@@ -63,6 +65,9 @@ class Board:
       ret += '|\n'
     ret += '+' + '-+'*self.__size + '\n'
     return ret
+
+  def getMovesBlack():
+    pass
 
   def __len__(self):
     return self.__size
