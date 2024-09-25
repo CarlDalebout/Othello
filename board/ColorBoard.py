@@ -15,7 +15,7 @@ class ColorBoard:
     # length of bit array
     self.__len = self.__size * self.__size
     # initalize bit array to represent the sizexsize color board
-    self.__board = bitstring.BitArray(int=0, length=self.__len)
+    self.__board = [bitstring.BitArray(int=0, length=self.__size) for s in range(self.__size)]
 
   # count the # of pieces in our color board
   # effectively counts the # of 1's in out bit array
@@ -31,30 +31,28 @@ class ColorBoard:
   def is_occupied(self, space):
     row = space[0]
     col = space[1]
-    index = self.__size*row + col
-    if index < 0 or index > self.__len:
+    if 0 < row >= self.__size or 0 < col >= self.__size:
       raise Exception("Given space does not exist in ColorBoard.")
     else:
-      return self.__board[index] == 1
+      return self.__board[row][col] == 1
 
   # sets space to either being occupied (value=1) or
   # unoccupied (value=0) by this color
   def set_space(self, space, value):
     row = space[0]
     col = space[1]
-    index = self.__size*row + col
-    if index < 0 or index > self.__len:
+    if 0 < row >= self.__size or 0 < col >= self.__size:
       raise Exception("Given space does not exist in ColorBoard.")
     else:
-      self.__board[index] = value
+      self.__board[row][col] = value
 
   # for printing color board
   def __str__(self):
     ret = ""
-    for i in range(self.__size):
+    for r in range(self.__size):
       ret += '+' + '-+'*self.__size + "\n"
-      for j in range(self.__size):
-        if self.__board[i*self.__size + j] == 1:
+      for c in range(self.__size):
+        if self.__board[r][c] == 1:
           ret += "|W"
         else:
           ret += "| "
@@ -69,7 +67,9 @@ class ColorBoard:
 
 if __name__ == '__main__':
   print('Testing ColorBoard.py...')
-  colorBoard = ColorBoard(5)
+  n = int(input('n: '))
+  colorBoard = ColorBoard(n)
+  print(colorBoard)
   colorBoard.set_space((0, 0), 1)
   print(colorBoard.is_occupied((0, 0)))
   print(colorBoard.is_occupied((1, 1)))
