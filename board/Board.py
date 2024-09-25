@@ -23,17 +23,6 @@ class Board:
     # set bottom left starting block for black
     self.blackBoard.set_space((size // 2, size // 2 - 1), 1)
 
-    directions = [
-      (-1, 0),   # North
-      (-1, 1),   # Northeast
-      (0, 1),    # East
-      (1, 1),    # Southeast
-      (1, 0),    # South
-      (1, -1),   # Southwest
-      (0, -1),   # West
-      (-1, -1)   # Northwest
-    ]
-
   # checks if a space is available for playing
   def is_occupied(self, space):
     blackOccupied = self.blackBoard.is_occupied(space)
@@ -58,12 +47,28 @@ class Board:
     # so switch them to the current color
 
     # current player's board & opponent's board
-    currentBoard = self.whiteBoard if color == 'W' else self.blackBoard
-    opponentBoard = self.blackBoard if color == 'W' else self.whiteBoard
+    if color == 'W':
+      currentBoard = self.whiteBoard 
+    elif color == 'B':
+      currentBoard = self.blackBoard
+    
+    if color == 'W':
+      opponentBoard = self.blackBoard
+    elif color == 'B':
+      opponentBoard = self.whiteBoard
 
     print("Checking validity...")
     # Check each direction for a valid move
-    for direction in directions:
+    for direction in [
+      (-1, 0),   # North
+      (-1, 1),   # Northeast
+      (0, 1),    # East
+      (1, 1),    # Southeast
+      (1, 0),    # South
+      (1, -1),   # Southwest
+      (0, -1),   # West
+      (-1, -1)   # Northwest
+    ]:
       print("Checking direction: ", direction)
       i, j = space
       i += direction[0]
@@ -100,7 +105,6 @@ class Board:
     # if no valid capture was found, then return False by default
     return False
 
-
   # Precondition: space has already been validated as available and valid
   def set_white(self, space):
     self.whiteBoard.set_space(space, 1)
@@ -135,6 +139,7 @@ if __name__ == '__main__':
   print("Testing Board.py...")
   board = Board(6)
   print(board)
+  print(board.is_valid((0,0), 'B'))
 
 # class Board:  
 #   def __init__(self, size = 6):
