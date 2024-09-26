@@ -31,7 +31,7 @@ class ColorBoard:
   def is_occupied(self, space):
     row = space[0]
     col = space[1]
-    if 0 < row >= self.__size or 0 < col >= self.__size:
+    if not (0 <= row < self.__size and 0 <= col < self.__size):
       raise Exception("Given space does not exist in ColorBoard.")
     else:
       return self.__board[row][col] == 1
@@ -41,7 +41,7 @@ class ColorBoard:
   def set_space(self, space, value):
     row = space[0]
     col = space[1]
-    if 0 < row >= self.__size or 0 < col >= self.__size:
+    if not (0 <= row < self.__size and 0 <= col < self.__size):
       raise Exception("Given space does not exist in ColorBoard.")
     else:
       self.__board[row][col] = value
@@ -71,6 +71,6 @@ if __name__ == '__main__':
   colorBoard = ColorBoard(n)
   print(colorBoard)
   colorBoard.set_space((0, 0), 1)
-  print(colorBoard.is_occupied((0, 0)))
+  print(colorBoard.is_occupied((-1, 0)))
   print(colorBoard.is_occupied((1, 1)))
   print(colorBoard)
