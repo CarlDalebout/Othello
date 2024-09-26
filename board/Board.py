@@ -45,8 +45,21 @@ class Board:
     # valid move; namely, the newly placed piece
     # must sandwitch enemy piece(s), and in doing
     # so switch them to the current color
+
+    # current player's board & opponent's board
+    if color == 'W':
+      currentBoard = self.whiteBoard 
+    elif color == 'B':
+      currentBoard = self.blackBoard
     
-    directions = [
+    if color == 'W':
+      opponentBoard = self.blackBoard
+    elif color == 'B':
+      opponentBoard = self.whiteBoard
+
+    print("Checking validity...")
+    # Check each direction for a valid move
+    for direction in [
       (-1, 0),   # North
       (-1, 1),   # Northeast
       (0, 1),    # East
@@ -55,15 +68,7 @@ class Board:
       (1, -1),   # Southwest
       (0, -1),   # West
       (-1, -1)   # Northwest
-    ]
-
-    # current player's board & opponent's board
-    currentBoard = self.whiteBoard if color == 'W' else self.blackBoard
-    opponentBoard = self.blackBoard if color == 'W' else self.whiteBoard
-
-    print("Checking validity...")
-    # Check each direction for a valid move
-    for direction in directions:
+    ]:
       print("Checking direction: ", direction)
       i, j = space
       i += direction[0]
@@ -100,7 +105,6 @@ class Board:
     # if no valid capture was found, then return False by default
     return False
 
-
   # Precondition: space has already been validated as available and valid
   def set_white(self, space):
     self.whiteBoard.set_space(space, 1)
@@ -135,6 +139,7 @@ if __name__ == '__main__':
   print("Testing Board.py...")
   board = Board(6)
   print(board)
+  print(board.is_valid((0,0), 'B'))
 
 # class Board:  
 #   def __init__(self, size = 6):
