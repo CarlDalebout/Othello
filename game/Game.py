@@ -17,12 +17,12 @@ class Game:
     # TODO: update play_white method
     def play_white(self, space):
         self.board.set_white(space)
-        #self.switch_pieces(space, 'W')
+        self.board.flip_pieces(space, 'W')
 
     # TODO: update play_black method
     def play_black(self, space):
         self.board.set_black(space)
-        #self.switch_pieces(space, 'B')
+        self.board.flip_pieces(space, 'B')
 
     def current_player(self):
         return self.__currentPlayer
