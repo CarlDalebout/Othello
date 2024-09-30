@@ -108,7 +108,7 @@ class Board:
   # given a valid move occurred, flip over enemy pieces
   def flip_pieces(self, space, color):
     # current player's board & opponent's board
-    if color == 'W':
+    if color in 'W':
       currentBoard = self.whiteBoard
       opponentBoard = self.blackBoard
     elif color == 'B':
@@ -176,11 +176,11 @@ class Board:
 
   # Precondition: space has already been validated as available and valid
   def set_white(self, space):
-    self.whiteBoard.set_space(space, 1)
+    self.whiteBoard.set_space(space)
 
   # Precondition: space has already been validated as available and valid
   def set_black(self, space):
-    self.blackBoard.set_space(space, 1)
+    self.blackBoard.set_space(space)
 
   # returns size (dimensions) of board
   def __len__(self):
