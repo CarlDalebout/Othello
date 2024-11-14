@@ -65,8 +65,8 @@ class Game:
     def play_game(self):
         game_completed = False
         while not game_completed:
-            game.show_board()
-            game.play_turn()
+            self.show_board()
+            self.play_turn()
             
 
 

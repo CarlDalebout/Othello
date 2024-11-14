@@ -210,7 +210,7 @@ if __name__ == '__main__':
   print("Testing Board.py...")
   board = Board(6)
   print(board)
-  print(board.is_valid((0,0), 'B'))
+  print(board.is_valid((2,2), 'B'))
   board.set_black((1, 2))
   print(board)
   board.flip_pieces((1, 2), 'B')
