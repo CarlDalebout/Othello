@@ -32,6 +32,8 @@ class Board:
   # checks if a space is a valid move
   def is_valid(self, space, color):
     row, col = space
+    print("row, col: ", space)
+    print("color: ", color)
     # if space is not on board, the move is not valid
     if row < 0 or row >= self.__size or col < 0 or col >= self.__size:
       return False
