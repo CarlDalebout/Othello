@@ -1,3 +1,4 @@
+
 # File : AI.py
 # Location: Othello/agent
 
