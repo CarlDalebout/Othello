@@ -4,8 +4,10 @@
 
 # if "bitstring" is not working you will need to do "pip install bitstring"
 
+import sys
 from ColorBoard import ColorBoard
-
+sys.path.append('..')
+import GLOBALS as g
 
 class Board:
   def __init__(self, size=6):
@@ -23,6 +25,9 @@ class Board:
     # set bottom left starting block for black
     self.blackBoard.set_space((size // 2, size // 2 - 1), 1)
 
+    # keeps track of fringe (edges) around the pieces
+    self.fringe = {}
+
   # checks if a space is available for playing
   def is_occupied(self, space):
     blackOccupied = self.blackBoard.is_occupied(space)
@@ -30,14 +35,15 @@ class Board:
     return blackOccupied or whiteOccupied
 
   # checks if a space is a valid move
-  def is_valid(self, space, color):
+  # returns a tuple: (is_move_valid, [list_of_tiles_to_flip_if_move_is_performed])
+  def validate_move(self, space, color):
     row, col = space
     # if space is not on board, the move is not valid
     if row < 0 or row >= self.__size or col < 0 or col >= self.__size:
-      return False
+      return (False, None)
     # if space is already occupied, the move is not valid
     elif self.is_occupied(space):
-      return False
+      return (False, None)
 
     # ELSE: if move is on board and is not occupied,
     # then we now must determine if it meets the
@@ -57,7 +63,7 @@ class Board:
     elif color == 'B':
       opponentBoard = self.whiteBoard
 
-    print("Checking validity...")
+    #print("Checking validity...")
     # Check each direction for a valid move
     for direction in [
       (-1, 0),   # North
@@ -69,25 +75,27 @@ class Board:
       (0, -1),   # West
       (-1, -1)   # Northwest
     ]:
-      print("Checking direction: ", direction)
+      #print("Checking direction: ", direction)
       i, j = space
       i += direction[0]
       j += direction[1]
 
       found_opponent = False
+      pieces_to_flip = []
 
       # Traverse in the given direction
-      print(0 <= i < self.__size, 0 <= j < self.__size)
-      print(i, j)
+      #print(0 <= i < self.__size, 0 <= j < self.__size)
+      #print(i, j)
       while 0 <= i < self.__size and 0 <= j < self.__size:
         # check if the space is an opponent's piece
         if opponentBoard.is_occupied((i, j)):
           found_opponent = True
+          pieces_to_flip.append((i, j))
         elif currentBoard.is_occupied((i, j)):
           # given that we've already found the opponent, then
           # the prescence of our piece means this move is valid
           if found_opponent:
-            return True
+            return (True, pieces_to_flip)
           # if we found our piece in the current direction,
           # but we have not found an enemy piece yet, then
           # there is no valid capture in this direction, so
@@ -103,7 +111,17 @@ class Board:
         j += direction[1]
 
     # if no valid capture was found, then return False by default
-    return False
+    return (False, None)
+
+  def flip_piece(self, space):
+    if self.blackBoard.is_occupied(space):
+      self.whiteBoard.set_space(space, 1)
+      self.blackBoard.set_space(space, 0)
+    elif self.whiteBoard.is_occupied(space):
+      self.whiteBoard.set_space(space, 0)
+      self.blackBoard.set_space(space, 1)
+    else:
+      raise Exception("Cannot flip piece of empty square!")
 
   # Precondition: space has already been validated as available and valid
   def set_white(self, space):
@@ -117,6 +135,10 @@ class Board:
   def __len__(self):
     return self.__size
 
+  # determines if the space is on the fringe
+  def is_in_fringe(self, space):
+    return space in self.fringe and self.fringe[space]
+
   # prints board
   def __str__(self):
     # initalize result string
@@ -128,6 +150,8 @@ class Board:
           ret += "|W"
         elif self.blackBoard.is_occupied((i, j)):
           ret += "|B"
+        elif g.DEBUGGING and self.is_in_fringe((i, j)):
+          ret += "|#"
         else:
           ret += "| "
       ret += '|\n'
@@ -139,77 +163,3 @@ if __name__ == '__main__':
   print("Testing Board.py...")
   board = Board(6)
   print(board)
-  print(board.is_valid((0,0), 'B'))
-
-# class Board:  
-#   def __init__(self, size = 6):
-#     self.__size = int(size)
-#     self.whiteBoard = bitstring.BitArray(int = 0, length=size*size)    # creating a bit array of size n*n for the white board
-    
-#     self.whiteBoard[size*(size//2-1) + size//2-1] = 1                  # setting the top left of the starting block
-#     self.whiteBoard[size*(size//2) + size//2] = 1                      # setting the bottom right of the starting block
-
-#     self.blackBoard = bitstring.BitArray(int = 0, length=size*size)    # creating a bit array of size n*n for the black board
-    
-#     self.blackBoard[size*(size//2-1) + size//2] = 1                    # setting the top right of the starting block
-#     self.blackBoard[size*(size//2) + size//2-1] = 1                    # setting the bottom left of the starting block
-
-#   def playWhite(self, row = None, col = None):
-#     index = self.__size*row + col                                      # creating the index to manipulate based on the row and col
-
-#     while self.blackBoard[index] == 1:                                 # Error check to prevent a space being placed on a already claimed black space
-#       print("!!!ERROR!!! can not place piece there try again")
-#       row = int(input("row: "))
-#       col = int(input("col: "))
-#       index = self.__size*row + col
-
-#     self.whiteBoard[index] = 1                                         # Setting bit to 1 
-  
-#   def printWhite(self):
-#     ret = ""
-#     for i in range(self.__size):
-#       ret += '+' + '-+'*self.__size + "\n"
-#       for j in range(self.__size):
-#         if self.whiteBoard[i*self.__size + j] == 1: ret += "|W"
-#         else: ret += "| "
-#       ret += '|\n'
-#     ret += '+' + '-+'*self.__size + '\n'
-#     return ret
-
-
-#   def playBlack(self, row = None, col = None):
-#     index = self.__size*row + col                                      # creating the index to manipulate based on the row and col
-    
-#     while self.whiteBoard[index] == 1:                                 # Error check to prevent a space being placed on a already claimed black space
-#       print("!!!ERROR!!! can not place piece there try again")
-#       row = int(input("row: "))
-#       col = int(input("col: "))
-#       index = self.__size*row + col
-
-#     self.blackBoard[index] = 1                                         # Setting bit to 1
-
-#   def printBlack(self):
-#     ret = ""
-#     for i in range(self.__size):
-#       ret += '+' + '-+'*self.__size + "\n"
-#       for j in range(self.__size):
-#         if self.whiteBoard[i*self.__size + j] == 1: ret += "|W"
-#         else: ret += "| "
-#       ret += '|\n'
-#     ret += '+' + '-+'*self.__size + '\n'
-#     return ret
-
-#   def __len__(self):
-#     return self.__size
-
-#   def __str__(self):
-#     ret = ""
-#     for i in range(self.__size):
-#       ret += '+' + '-+'*self.__size + "\n"
-#       for j in range(self.__size):
-#         if self.whiteBoard[i*self.__size + j] == 1: ret += "|W"
-#         elif self.blackBoard[i*self.__size + j] == 1: ret += "|B"
-#         else: ret += "| "
-#       ret += '|\n'
-#     ret += '+' + '-+'*self.__size + '\n'
-#     return ret
