@@ -1,4 +1,7 @@
 
+# maximum threshold (large negative #, etc) instead of initalizing to None
+# merge alpha and beta into minMax
+# 
 
 def abmm(s, player, alpha = [None, -999999], beta = [None, 999999]):
   if termial_test(s):
