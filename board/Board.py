@@ -4,8 +4,10 @@
 
 # if "bitstring" is not working you will need to do "pip install bitstring"
 
+import sys
 from ColorBoard import ColorBoard
-
+sys.path.append('..')
+import GLOBALS as g
 
 class Board:
   def __init__(self, size=6):
@@ -23,6 +25,9 @@ class Board:
     # set bottom left starting block for black
     self.blackBoard.set_space((size // 2, size // 2 - 1), 1)
 
+    # keeps track of fringe (edges) around the pieces
+    self.fringe = {}
+
   # checks if a space is available for playing
   def is_occupied(self, space):
     blackOccupied = self.blackBoard.is_occupied(space)
@@ -30,14 +35,15 @@ class Board:
     return blackOccupied or whiteOccupied
 
   # checks if a space is a valid move
-  def is_valid(self, space, color):
+  # returns a tuple: (is_move_valid, [list_of_tiles_to_flip_if_move_is_performed])
+  def validate_move(self, space, color):
     row, col = space
     # if space is not on board, the move is not valid
     if row < 0 or row >= self.__size or col < 0 or col >= self.__size:
-      return False
+      return (False, None)
     # if space is already occupied, the move is not valid
     elif self.is_occupied(space):
-      return False
+      return (False, None)
 
     # ELSE: if move is on board and is not occupied,
     # then we now must determine if it meets the
@@ -75,6 +81,7 @@ class Board:
       j += direction[1]
 
       found_opponent = False
+      pieces_to_flip = []
 
       # Traverse in the given direction
       #print(0 <= i < self.__size, 0 <= j < self.__size)
@@ -83,11 +90,12 @@ class Board:
         # check if the space is an opponent's piece
         if opponentBoard.is_occupied((i, j)):
           found_opponent = True
+          pieces_to_flip.append((i, j))
         elif currentBoard.is_occupied((i, j)):
           # given that we've already found the opponent, then
           # the prescence of our piece means this move is valid
           if found_opponent:
-            return True
+            return (True, pieces_to_flip)
           # if we found our piece in the current direction,
           # but we have not found an enemy piece yet, then
           # there is no valid capture in this direction, so
@@ -103,8 +111,9 @@ class Board:
         j += direction[1]
 
     # if no valid capture was found, then return False by default
-    return False
+    return (False, None)
 
+<<<<<<< HEAD
   # given a valid move occurred, flip over enemy pieces
   def flip_pieces(self, space, color):
     # current player's board & opponent's board
@@ -173,6 +182,17 @@ class Board:
         for piece in found_opponents:
           currentBoard.set_space(piece, 1)
           opponentBoard.set_space(piece, 0)
+=======
+  def flip_piece(self, space):
+    if self.blackBoard.is_occupied(space):
+      self.whiteBoard.set_space(space, 1)
+      self.blackBoard.set_space(space, 0)
+    elif self.whiteBoard.is_occupied(space):
+      self.whiteBoard.set_space(space, 0)
+      self.blackBoard.set_space(space, 1)
+    else:
+      raise Exception("Cannot flip piece of empty square!")
+>>>>>>> origin/implement_minMax
 
   # Precondition: space has already been validated as available and valid
   def set_white(self, space):
@@ -186,6 +206,10 @@ class Board:
   def __len__(self):
     return self.__size
 
+  # determines if the space is on the fringe
+  def is_in_fringe(self, space):
+    return space in self.fringe and self.fringe[space]
+
   # prints board
   def __str__(self):
     # initalize result string
@@ -197,6 +221,8 @@ class Board:
           ret += "|W"
         elif self.blackBoard.is_occupied((i, j)):
           ret += "|B"
+        elif g.DEBUGGING and self.is_in_fringe((i, j)):
+          ret += "|#"
         else:
           ret += "| "
       ret += '|\n'
@@ -207,9 +233,4 @@ class Board:
 if __name__ == '__main__':
   print("Testing Board.py...")
   board = Board(6)
-  print(board)
-  print(board.is_valid((0,0), 'B'))
-  board.set_black((1, 2))
-  print(board)
-  board.flip_pieces((1, 2), 'B')
   print(board)
