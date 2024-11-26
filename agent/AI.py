@@ -1,20 +1,18 @@
 # File : AI.py
 # Location: Othello/agent
 
+############# TODO LIST #############
+# [DONE] Built SearchNode.py (Othello/library)
+# [DONE] Merged minMax algorithms + added comments
+# [TODO - Nathan] Board Methods (Generate Valid Moves & Successors)
+# [TODO - Carl] Generate Search Tree (AI.py in AI.get_move())
+# [TODO] Create State Class; used for convenience for storing board
+# [TODO] Create heuristic_table (dictionary)
+# [TODO] Finish AI.score() and AI.h()
+# [TODO] Ginish AI.get_t() to generate terminal values for terminal nodes in search tree
+# [TODO] Update MinMax to work with the generated searchtree and terminal values
+# [TODO] Finish and test AI.get_move()
 
-# TODO (ASSIGNED):
-# Nathan : board methods: generate valid moves & successors
-# Nathan : merge both minMax algorithms into one (using test data)
-# Carl : generate search tree 
-
-# TODO LIST (UNASSIGNED):
-# Create SearchNode class
-# create heuristic_table (dictionary)
-# finish heuristic method (AI.h())
-# finish score method (AI.score())
-# finish & test AI.get_t() using h() and score()
-# Update MinMax to work with SearchTree and SearchNode instead of hardcoded test data
-# Finish and test AI.get_move()
 
 from Agent import Agent
 import random
@@ -64,7 +62,7 @@ class AI(Agent):
                                   parent=None,
                                   parent_action=None,
                                   value=None,
-                                  possible_actions=board.get_successors())
+                                  children=board.get_successors())
 
         # 1.2 use for loop to generate rest of tree
 
