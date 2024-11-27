@@ -18,6 +18,12 @@ class ColorBoard:
     # initalize bit array to represent the sizexsize color board
     self.__board = [bitstring.BitArray(int=0, length=self.__size) for s in range(self.__size)]
 
+    
+  def duplicate(self):
+    new_board = ColorBoard(self.__size)
+    new_board.__board = [b.copy() for b in self.__board]
+    return new_board
+
   # count the # of pieces in our color board
   # effectively counts the # of 1's in out bit array
   def count_items(self):

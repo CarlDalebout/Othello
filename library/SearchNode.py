@@ -4,17 +4,20 @@ class SearchNode:
     '''
     SearchNode class, used for generating search tree for MinMax algorithm
     state = board statex
-    value = value generated from heuristic (f cost)
+    value = value generated from heuristic (f cost); only used for terminal nodes
     children = sucessors from current node
+    isTerminal = identifes if node is terminal
     '''
 
     def __init__(self,
                  state,
                  value=0,
-                 children=[]):
+                 children=[],
+                 isTerminal=False):
         self.state = state
         self.value = value
         self.children = children
+        self.isTerminal=isTerminal
 
     def priority(self):
         return self.value

@@ -4,7 +4,7 @@
 ############# TODO LIST #############
 # [DONE] Built SearchNode.py (Othello/library)
 # [DONE] Merged minMax algorithms + added comments
-# [TODO - Nathan] Board Methods (Generate Valid Moves & Successors)
+# [DONE] Board Methods (Generate Successors)
 # [TODO - Carl] Generate Search Tree (AI.py in AI.get_move())
 # [TODO] Create State Class; used for convenience for storing board
 # [TODO] Create heuristic_table (dictionary)
@@ -21,8 +21,8 @@ import random
 heuristic_table = {}
 
 class AI(Agent):
-    def __init__(self, closed_list, fringe):
-        Agent.__init__(self, closed_list, fringe)
+    def __init__(self, board, color):
+        Agent.__init__(self, board, color)
 
     # TODO: return heuristic value for space
     def h(self, h_table, space):
@@ -30,7 +30,7 @@ class AI(Agent):
         
     # score function
     # calculates a score for a player based on a given state
-    def score(self, state, player):
+    def score(self, state):
         sum_score = 0
         # FOR EACH player's piece
         #  add h(space) to sum_score
@@ -39,30 +39,40 @@ class AI(Agent):
     # get_t : generates terminal value
     # state = board
     # player = whose turn is it
-    def get_t(self, state, player):
-        opponent = 'O' if player == 'X' else 'X'
+    def get_t(self, state):
+        opponentColor = 'O' if self.color == 'X' else 'X'
         
         # TODO: try out different heuristics...
         
         # example heuristic: return difference of scores
-        playerScore = self.score(state,player)
-        opponentScore = self.score(state, opponent)
+        playerScore = self.score(state,self.color)
+        opponentScore = self.score(state, opponentColor)
         return (playerScore - opponentScore)
 
-    # calculate minmax value using heuristic function and minmax algorithm
+    # get_move is the brain of the AI; based on minmax algorithm and various heuristics
     # state = board
-    def get_move_(self, state, player, max_depth):
+    # max_depth = how far to search
+    # timeLeft = total time left for playing game
+    def get_move_(self, board, max_depth, timeLeft):
         # step 1: generate search tree
         # requires that we create a SearchNode
         # each SearchNode should have:
         # (state, parent, parent_action, value=None, possible_actions)
 
-        # 1.1 TODO : board.get_successors()
-        initial_node = SearchNode(state=state,
-                                  parent=None,
-                                  parent_action=None,
+        initial_node = SearchNode(state=board,
                                   value=None,
-                                  children=board.get_successors())
+                                  children=[])
+
+        # current_depth = 1
+        # current_node = initial_node
+        # while current_depth is less than max_depth
+        #     FOR EACH board_state in board.successors()
+        #         new_node = SearchNode(state=board_state, value=None, children=[])
+        #         if we are on last layer:
+        #            new_node.isTerminal=True
+        #            new_node.value = h(...) # calculate heuristic
+        #         current_node.children.append(new_node)
+        #     current_depth += 1
 
         # 1.2 use for loop to generate rest of tree
 
@@ -76,14 +86,14 @@ class AI(Agent):
 
 
     # TODO: calculate move using minmax algorithm
-    def get_move(self, board, color):
+    def get_move(self):
         print("AI is thinking...")
         
-        choices = list(self.fringe.keys())
+        choices = list(self.board.fringe.keys())
         move = random.choice(choices)
 
         while True:
-            is_valid,pieces_to_flip = board.validate_move(move, color)
+            is_valid,pieces_to_flip = self.board.validate_move(move, self.color)
 
             if is_valid:
                 self.pieces_to_flip = pieces_to_flip

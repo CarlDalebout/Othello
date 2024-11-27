@@ -19,25 +19,8 @@ class Game:
         self.board = Board(n)
         # black starts first
         self.__currentPlayer = 'B'
-        # initial played moves
-        closed_list = [
-            (n // 2 - 1, n // 2 - 1),
-            (n // 2, n // 2 - 1),
-            (n // 2 - 1, n // 2),
-            (n // 2, n // 2)
-        ]
-        # initial fringe
-        x0 = y0 = n // 2 - 1
-        fringe = {}
-        for x in range(0, n):
-            for y in range(0, n):
-                if x >= x0-1 and x < x0+3 and y >= y0-1 and y < y0+3 and (x, y) not in closed_list:
-                    fringe[(x, y)] = True
-        self.black = Player(closed_list, fringe)
-        self.white = AI(closed_list, fringe)
-
-        # set board fringe
-        self.board.fringe = fringe.copy()
+        self.black = Player(self.board, 'B')
+        self.white = AI(self.board, 'W')
 
     def current_player(self):
         return self.__currentPlayer
@@ -48,13 +31,13 @@ class Game:
     def play_turn(self):
         if self.__currentPlayer == 'B':
             print("-----Black's Turn-----")
-            move = self.black.get_move(self.board, self.__currentPlayer)
-            self.black.play_move(self.board, move, self.__currentPlayer)
+            move = self.black.get_move()
+            self.black.play_move(move)
             self.__currentPlayer = 'W'
         else:
             print("-----White's Turn-----")
-            move = self.white.get_move(self.board, self.__currentPlayer)
-            self.white.play_move(self.board, move, self.__currentPlayer)
+            move = self.white.get_move()
+            self.white.play_move(move)
             self.__currentPlayer = 'B'
 
     def play_game(self):
