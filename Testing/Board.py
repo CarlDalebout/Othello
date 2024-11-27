@@ -117,7 +117,7 @@ class Board:
       moves.clear();
 
       Possible class route
-#====================================================
+#==================================================================================================================
     private MoveFinder[] finders = new MoveFinder[] {new UpFinder(), new DownFinder(), new LeftFinder(),
         new RightFinder(), new UpLeftFinder(), new UpRightFinder(), new DownLeftFinder(), new DownRightFinder()};
 
@@ -209,6 +209,29 @@ class Board:
     ret += line
     return ret
 
+
+def minMax(board, depth, alpha = -9999999, beta = 99999999, player = True):
+  if depth == 0: # or whiteBoard & blackBoard = 2^size*size
+    return board.eval()
+  if player:
+    maxEval = -999999999
+    for move in board.getmoves("W"):
+      eval = minMax(move, depth-1, alpha, beta, False)
+      maxEval = max(maxEval, eval)
+      alpha = max(alpha, eval)
+      if beta <= alpha:
+        break
+    return maxEval
+  
+  else:
+    minEval = 999999999
+    for move in board.getmoves("B"):
+      eval = minMax(move, depth-1, alpha, beta, True)
+      minEval = min(minEval, eval)
+      beta = min(beta, eval)
+      if beta <= alpha:
+        break
+    return minEval
 
 
 if __name__ == "__main__":
