@@ -70,7 +70,7 @@ class AI(Agent):
         #         new_node = SearchNode(state=board_state, value=None, children=[])
         #         if we are on last layer:
         #            new_node.isTerminal=True
-        #            new_node.value = h(...) # calculate heuristic
+        #            new_node.value = get_t(...) # calculate value from heuristic
         #         current_node.children.append(new_node)
         #     current_depth += 1
 
