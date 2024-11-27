@@ -133,8 +133,19 @@ class Board:
 
   def duplicate(self):
     return Board(self.__size, self.fringe.copy(), self.closed_list.copy(), self.whiteBoard.duplicate(), self.blackBoard.duplicate(), True)
+
+  # generates a list of actions
+  def actions(self, player):
+    valid_moves = {}
+    for move in self.fringe.keys():
+      is_valid,pieces_to_flip = board.validate_move(move, player)
+      
+      if is_valid:
+        valid_moves[move] = pieces_to_flip
+
+    return valid_moves
   
-  # generates list of sucecssor states
+  # generates list of available actions states
   def successors(self, player):
 
     # generate successor board state for each valid action
@@ -224,9 +235,9 @@ class Board:
 if __name__ == '__main__':
   print("Testing Board.py...")
   board = Board(6)
-  s = board.successors('W')
+
+  actions = board.actions('W')
   print(board)
-  
-  for b in s:
-    print(b)
-  
+  print(actions)
+  for a in actions:
+    print(a)
