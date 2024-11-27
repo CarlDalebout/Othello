@@ -65,6 +65,8 @@ class Board:
           legal |= tmp & emptyBoard;
           potentialMoves = tmp & opponentBoard;
       }
+
+
       // DOWN
       potentialMoves = (currentBoard << SIZE) & UP_MASK & opponentBoard;
       while (potentialMoves != 0L) {
@@ -72,6 +74,8 @@ class Board:
           legal |= tmp & emptyBoard;
           potentialMoves = tmp & opponentBoard;
       }
+
+      
       // LEFT
       potentialMoves = (currentBoard >> 1L) & RIGHT_MASK & opponentBoard;
       while (potentialMoves != 0L) {
