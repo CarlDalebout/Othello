@@ -36,7 +36,8 @@ class Game:
             self.__currentPlayer = 'W'
         else:
             print("-----White's Turn-----")
-            move = self.white.get_move()
+            move = self.white.get_move_(2)
+            print(move)
             self.white.play_move(move)
             self.__currentPlayer = 'B'
 
@@ -50,7 +51,7 @@ class Game:
 
 if __name__ == '__main__':
     print("Testing Game.py...")
-    game = Game()
+    game = Game(4)
     game.play_game()
     
     

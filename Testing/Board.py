@@ -1,4 +1,5 @@
 import math
+import copy
 
 heuristic_table01010 = [[100, -30,  8,  6,  2,  2,  6,  8, -30, 100],
                         [-30, -50,  6,  0,  0,  0,  0,  6, -50, -30],
@@ -34,23 +35,112 @@ class Board:
     self.__size = size
     self.__board = [[' ' for r in range(size)] for c in range(size)]
     
+    #setting white pieces
     self.__board[size // 2 - 1][size // 2 - 1] = "W"
     self.__board[size // 2    ][size // 2    ] = "W"
 
+    #setting black pieces
     self.__board[size // 2 - 1][size // 2    ] = "B"
     self.__board[size // 2    ][size // 2 - 1] = "B"
-  
+
+    #setting closed list
+    self.__closed_list = [
+        (self.__size // 2 - 1, self.__size // 2 - 1),
+        (self.__size // 2, self.__size // 2 - 1),
+        (self.__size // 2 - 1, self.__size // 2),
+        (self.__size // 2, self.__size // 2)
+      ]
+
+    self.__fringe = {}
+    x0 = y0 = self.__size // 2 - 1
+    for x in range(0, self.__size):
+      for y in range(0, self.__size):
+        if x >= x0-1 and x < x0+3 and y >= y0-1 and y < y0+3 and (x, y) not in self.__closed_list:
+          self.__fringe[(x, y)] = True
+          self.set_space((x,y), "#")
+
+
   def get_space(self, space):
     return self.__board[space[0]][space[1]]
 
   def set_space(self, space, color=' '):
     self.__board[space[0]][space[1]] = color
+  
+  def flip_space(self, space):
+    if 'B' == self.get_space(space):
+      self.set_space(space, 'W')
+    elif 'W' == self.get_space(space):
+      self.set_space(space, 'B')
+    else:
+      raise Exception("Cannot flip piece of empty square!")
 
   def is_occupied(self, space):
     return self.__board[space[0]][space[1]] != ' '
 
-  # [TODO] Need a way to create a list of moves a player can make at a given time
+  def validate_move(self, space, color):
+    if color == 'W':
+      currentBoard = 'W' 
+    elif color == 'B':
+      currentBoard = 'B'
+    
+    if color == 'W':
+      opponentBoard = 'B'
+    elif color == 'B':
+      opponentBoard = 'W'
+
+    for direction in [
+      (-1, 0),   # North
+      (-1, 1),   # Northeast
+      (0, 1),    # East
+      (1, 1),    # Southeast
+      (1, 0),    # South
+      (1, -1),   # Southwest
+      (0, -1),   # West
+      (-1, -1)   # Northwest
+    ]:
+      i, j = space  
+      i += direction[0]
+      j += direction[1]
+
+      found_opponent = False
+      pieces_to_flip = []
+
+      while(0 <= i < self.__size and 0 <= j < self.__size):
+         # check if the space is an opponent's piece
+        if opponentBoard == self.get_space((i, j)):
+          found_opponent = True
+          pieces_to_flip.append((i, j))
+        elif currentBoard == self.get_space((i, j)):
+          # given that we've already found the opponent, then
+          # the prescence of our piece means this move is valid
+          if found_opponent:
+            return (True, pieces_to_flip)
+          
+          # if we found our piece in the current direction,
+          # but we have not found an enemy piece yet, then
+          # there is no valid capture in this direction, so
+          # we stop searching this direction
+          else:
+            break
+        # if the space is not occupied, then stop searching that direction
+        else:
+          break
+
+        # Move to the next position in the current direction
+        i += direction[0]
+        j += direction[1]
+      # if no valid capture was found, then return False by default
+    return (False, None)
+
   def get_moves(self, color):
+    valid_moves = {}
+    for space in self.__fringe.keys():
+      is_valid, pieces_to_flip = self.validate_move(space, color)
+      
+      if is_valid:
+        valid_moves[space] = pieces_to_flip
+
+    return valid_moves
     """
       private void calculateMoves() {
       legal = 0L;
@@ -58,6 +148,7 @@ class Board:
       long currentBoard = getCurrentBoard();
       long opponentBoard = getOpponentBoard();
       long emptyBoard = emptyBoard();
+      
       // UP
       potentialMoves = (currentBoard >> SIZE) & DOWN_MASK & opponentBoard;
       while (potentialMoves != 0L) {
@@ -75,7 +166,7 @@ class Board:
           potentialMoves = tmp & opponentBoard;
       }
 
-      
+
       // LEFT
       potentialMoves = (currentBoard >> 1L) & RIGHT_MASK & opponentBoard;
       while (potentialMoves != 0L) {
@@ -163,9 +254,37 @@ class Board:
     // and so on for the rest of the moves (LeftFinder, RightFinder, etc).
 
     """
-    pass
   
-  def score(self):
+  # Checks and updates the current board with the provided piece
+  def play_move(self, space, color):
+        validity, pieces_to_flip = self.validate_move(space, color)
+
+        # Step 1: Place Piece
+        self.set_space(space, color)
+        
+        # Step 2: Flip Enemy Pieces
+        for piece in pieces_to_flip:
+            self.flip_space(piece)
+
+        # Step 3: Updated Closed List & Respace
+        # placed piece from the fringe
+        self.__closed_list.append(space)
+        del self.__fringe[(space[0], space[1])]
+
+        # Step 4: Update Fringe
+        for x in range(space[0]-1, space[0]+2):
+            for y in range(space[1]-1, space[1]+2):
+                if 0 <= x < len(self.__board) and 0 <= y < len(self.__board) and (x, y) not in self.__fringe and (x, y) not in self.__closed_list:
+                    self.__fringe[(x, y)] = True
+                    self.set_space((x,y), '#')
+
+  # creates an instence of the board where the move has been played
+  def make_move(self, space, color):
+    board = copy.deepcopy(self)
+    board.play_move(space, color)
+    return board
+
+  def score(self, color):
     white_score = 0
     black_score = 0
     
@@ -200,7 +319,10 @@ class Board:
             black_score += 1
             # print("Black:", 1)
 
-    return (white_score, black_score)
+    if color == "W":
+      return white_score - black_score
+    else:
+      return black_score - white_score
 
   def __str__(self): 
     ret = ""
@@ -214,28 +336,43 @@ class Board:
     return ret
 
 
-def minMax(board, depth, alpha = -9999999, beta = 99999999, player = True):
+def minMax(board, depth, Color = "W", action = None, alpha = [None, -9999999], beta = [None, 99999999]):
   if depth == 0: # or whiteBoard & blackBoard = 2^size*size
-    return board.eval()
-  if player:
-    maxEval = -999999999
-    for move in board.getmoves("W"):
-      eval = minMax(move, depth-1, alpha, beta, False)
-      maxEval = max(maxEval, eval)
-      alpha = max(alpha, eval)
-      if beta <= alpha:
+    if Color == "W":
+      return (action, board.score("W"))
+    else:
+      return (action, board.score("B"))
+  if Color == "W":
+    maximum = -99999999
+    maximum_action = None
+    for move in board.get_moves("W"):
+      new_board = board.make_move(move, "W")
+      action, value = minMax(new_board, depth-1, "B", move, alpha, beta)
+      if value > maximum:
+          maximum = value
+          maximum_action = move
+      if maximum > alpha[1]:
+          alpha[1] = maximum
+          alpha[0] = maximum_action
+      if beta[1] <= alpha[1]:
         break
-    return maxEval
+    return (maximum_action, maximum)
   
   else:
-    minEval = 999999999
-    for move in board.getmoves("B"):
-      eval = minMax(move, depth-1, alpha, beta, True)
-      minEval = min(minEval, eval)
-      beta = min(beta, eval)
-      if beta <= alpha:
+    minimum = 9999999999
+    minimum_action = None
+    for move in board.get_moves("B"):
+      new_board = board.make_move(move, "B")
+      action, value = minMax(new_board, depth-1, "W", move, alpha, beta)
+      if value < minimum:
+        minimum = value
+        minimum_action = move
+      if minimum > beta[1]:
+        beta[1] = minimum
+        beta[0] = minimum_action
+      if beta[1] <= alpha[1]:
         break
-    return minEval
+    return (minimum_action, minimum)
 
 
 if __name__ == "__main__":
@@ -255,24 +392,16 @@ if __name__ == "__main__":
   # print("White Score:", score[0])
   # print("Black Score:", score[1])
 
-  b = Board(6)
-  print(b)
-  
-  b.set_space((0, 0), "W")
-  b.set_space((0, 1), "W")
-  b.set_space((0, 2), "W")
-  b.set_space((0, 3), "W")
-  b.set_space((0, 4), "W")
+  a = Board(6)
+  b = a.make_move((3,4), "B")
+  print("a:\n", a)
+  print(a.get_moves('W'))
+  print("White Score:", a.score('W'))
+  print("Black Score:", a.score('B'))
+  print("\nb:\n", b)
+  print(b.get_moves('W'))
+  print("White Score:", b.score("W"))
+  print("Black Score:", b.score("B"))
 
-  b.set_space((1, 0), "B")
-  b.set_space((1, 1), "B")
-  b.set_space((1, 2), "B")
-  b.set_space((1, 3), "B")
-  b.set_space((1, 4), "B")
-  b.set_space((1, 5), "B")
-  b.set_space((2, 0), "B")
-
-  print(b)
-  score = b.score()
-  print("White Score:", score[0])
-  print("Black Score:", score[1])
+  print(minMax(b, 4, "W"))
+  print(minMax(b, 4, "B"))

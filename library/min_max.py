@@ -1,5 +1,8 @@
 # File : min_max.py
 
+import Board as Board
+
+
 # TODO:
 # Generate terminal_values dictionary from terminal search nodes in search tree
 # the terminal_test(s) method should be defined in AI.py file
@@ -45,7 +48,7 @@ def terminal_test(s):
 #################### END: TEST DATA ####################
 
 ########## MIN MAX ALGORITHM
-# s = SearchNode
+# board  = Board
 # player = MAX/MIN
 # minMax = used for alpha-beta pruning; initialized to None for left-most nodes in each row
 def abmm(s, player, minMax=None): 
@@ -113,6 +116,29 @@ def abmm(s, player, minMax=None):
 # maximum threshold (large negative #, etc) instead of initalizing to None
 # merge alpha and beta into minMax
 # 
+
+def minMax(board, depth, alpha = -9999999, beta = 99999999, player = True):
+  if depth == 0 or (board.whiteboard & board.blackboard) == 2: # or whiteBoard & blackBoard = 2^size*size
+    return board.eval()
+  if player:
+    maxEval = -999999999
+    for move in board.getmoves("W"):
+      eval = minMax(move, depth-1, alpha, beta, False)
+      maxEval = max(maxEval, eval)
+      alpha = max(alpha, eval)
+      if beta <= alpha:
+        break
+    return maxEval
+  
+  else:
+    minEval = 999999999
+    for move in board.getmoves("B"):
+      eval = minMax(move, depth-1, alpha, beta, True)
+      minEval = min(minEval, eval)
+      beta = min(beta, eval)
+      if beta <= alpha:
+        break
+    return minEval
 
 if __name__ == '__main__':
     # test min-max with alpha-beta pruning algorithm

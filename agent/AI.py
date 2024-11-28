@@ -14,6 +14,7 @@
 # [TODO -] Finish and test AI.get_move()
 
 from Agent import Agent
+
 import random
 
 # first heuristics table for a 10x10 board
@@ -93,16 +94,11 @@ class AI(Agent):
     # state = board
     # max_depth = how far to search
     # timeLeft = total time left for playing game
-    def get_move_(self, board, max_depth, timeLeft):
+    def get_move_(self, max_depth, timeleft = 99999):
         # step 1: generate search tree
         # requires that we create a SearchNode
         # each SearchNode should have:
         # (state, parent, parent_action, value=None, possible_actions)
-
-        initial_node = SearchNode(state=board,
-                                  value=None,
-                                  children=[])
-
         # current_depth = 1
         # current_node = initial_node
         # while current_depth is less than max_depth
@@ -113,16 +109,37 @@ class AI(Agent):
         #            new_node.value = get_t(...) # calculate value from heuristic
         #         current_node.children.append(new_node)
         #     current_depth += 1
-
         # 1.2 use for loop to generate rest of tree
-
         # 1.3 generate terminal values for bottom search nodes (using heuristic)
-
         # 1.4 call min_max on search tree
-
-
         # 1.5 return action/move
-        pass
+
+        def minMax(board, depth, alpha = -9999999, beta = 99999999, player = True):
+            if depth == 0: # or whiteBoard & blackBoard = 2^size*size
+                return board.eval()
+            if player:
+                maxEval = -999999999
+                for move in board.actions("W"):
+                    new_board = board.make(move)
+                    eval = minMax(new_board, depth-1, alpha, beta, False)
+                    maxEval = max(maxEval, eval)
+                    alpha = max(alpha, eval)
+                    if beta <= alpha:
+                        break
+                return maxEval
+            
+            else:
+                minEval = 999999999
+                for move in board.actions("B"):
+                    new_board = board.make(move)
+                    eval = minMax(new_board, depth-1, alpha, beta, True)
+                    minEval = min(minEval, eval)
+                    beta = min(beta, eval)
+                    if beta <= alpha:
+                        break
+                return minEval
+
+        return minMax(self.board, max_depth)
 
 
     # TODO: calculate move using minmax algorithm
@@ -150,3 +167,4 @@ class AI(Agent):
 
 if __name__ == "__main__":
     print("Testing AI.py...")
+    board = Board()

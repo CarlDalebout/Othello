@@ -235,7 +235,6 @@ class Board:
 if __name__ == '__main__':
   print("Testing Board.py...")
   board = Board(6)
-
   actions = board.actions('W')
   print(board)
   print(actions)
