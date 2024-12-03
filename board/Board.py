@@ -138,7 +138,7 @@ class Board:
   def actions(self, player):
     valid_moves = {}
     for move in self.fringe.keys():
-      is_valid,pieces_to_flip = board.validate_move(move, player)
+      is_valid,pieces_to_flip = self.validate_move(move, player)
       
       if is_valid:
         valid_moves[move] = pieces_to_flip

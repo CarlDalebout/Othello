@@ -167,4 +167,3 @@ class AI(Agent):
 
 if __name__ == "__main__":
     print("Testing AI.py...")
-    board = Board()

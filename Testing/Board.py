@@ -2,33 +2,39 @@ import math
 import copy
 
 heuristic_table01010 = [[100, -30,  8,  6,  2,  2,  6,  8, -30, 100],
-                        [-30, -50,  6,  0,  0,  0,  0,  6, -50, -30],
-                        [  8,   6,  0,  0,  0,  0,  0,  0,   6,   8],
-                        [  6,   0,  0,  0,  0,  0,  0,  0,   0,   6],
-                        [  2,   0,  0,  0,  3,  3,  0,  0,   0,   2],
-                        [  2,   0,  0,  0,  3,  3,  0,  0,   0,   2],
-                        [  6,   0,  0,  0,  0,  0,  0,  0,   0,   6],
-                        [  8,   6,  0,  0,  0,  0,  0,  0,   6,   8],
-                        [-30, -50,  0,  0,  0,  0,  0,  6, -50, -30],
+                        [-30, -50,  6,  1,  1,  1,  1,  6, -50, -30],
+                        [  8,   6,  1,  1,  1,  1,  1,  1,   6,   8],
+                        [  6,   1,  1,  1,  1,  1,  1,  1,   1,   6],
+                        [  2,   1,  1,  1,  3,  3,  1,  1,   1,   2],
+                        [  2,   1,  1,  1,  3,  3,  1,  1,   1,   2],
+                        [  6,   1,  1,  1,  1,  1,  1,  1,   1,   6],
+                        [  8,   6,  1,  1,  1,  1,  1,  1,   6,   8],
+                        [-30, -50,  1,  1,  1,  1,  1,  6, -50, -30],
                         [100, -30,  8,  6,  2,  2,  6,  8, -30, 100]]
 
 # first heuristics table for a 8x8 board
-heuristic_table0108 = [[100, -30,  6,  2,  2,  6, -30, 100],
-                       [-30, -50,  0,  0,  0,  0, -50, -30],
-                       [  6,   0,  0,  0,  0,  0,   0,   6],
-                       [  2,   0,  0,  3,  3,  0,   0,   2],
-                       [  2,   0,  0,  3,  3,  0,   0,   2],
-                       [  6,   0,  0,  0,  0,  0,   0,   6],
-                       [-30, -50,  0,  0,  0,  0, -50, -30],
-                       [100, -30,  6,  2,  2,  6, -30, 100]]
+heuristic_table0108 = [[111, -31,  6,  2,  2,  6, -31, 111],
+                       [-31, -51,  1,  1,  1,  1, -51, -31],
+                       [  6,   1,  1,  1,  1,  1,   1,   6],
+                       [  2,   1,  1,  3,  3,  1,   1,   2],
+                       [  2,   1,  1,  3,  3,  1,   1,   2],
+                       [  6,   1,  1,  1,  1,  1,   1,   6],
+                       [-30, -50,  1,  1,  1,  1, -51, -31],
+                       [110, -30,  6,  2,  2,  6, -30, 100]]
 
 # first heuristics table for a 6x6 board
 heuristic_table0106 = [[100, -30,  6,  6, -30, 100],
-                       [-30, -50,  0,  0, -50, -30],
-                       [  6,   0,  3,  3,   0,   6],
-                       [  6,   0,  3,  3,   0,   6],
-                       [-30, -50,  0,  0, -50, -30],
+                       [-30, -50,  1,  1, -50, -30],
+                       [  6,   1,  3,  3,   1,   6],
+                       [  6,   1,  3,  3,   1,   6],
+                       [-30, -50,  1,  1, -50, -30],
                        [100, -30,  6,  6, -30, 100]]
+
+heuristic_table0104 = [[50, -4, -4, 50],
+                       [-4,  3,  3, -4],
+                       [-4,  3,  3, -4],
+                       [50, -4, -4, 50]]
+                       
 
 class Board:
   def __init__(self, size=6):
@@ -58,7 +64,6 @@ class Board:
         if x >= x0-1 and x < x0+3 and y >= y0-1 and y < y0+3 and (x, y) not in self.__closed_list:
           self.__fringe[(x, y)] = True
           self.set_space((x,y), "#")
-
 
   def get_space(self, space):
     return self.__board[space[0]][space[1]]
@@ -257,26 +262,34 @@ class Board:
   
   # Checks and updates the current board with the provided piece
   def play_move(self, space, color):
+        
         validity, pieces_to_flip = self.validate_move(space, color)
 
-        # Step 1: Place Piece
-        self.set_space(space, color)
-        
-        # Step 2: Flip Enemy Pieces
-        for piece in pieces_to_flip:
-            self.flip_space(piece)
+        if validity:
+          # Step 1: Place Piece
+          self.set_space(space, color)
+          
+          # Step 2: Flip Enemy Pieces
+          for piece in pieces_to_flip:
+              self.flip_space(piece)
 
-        # Step 3: Updated Closed List & Respace
-        # placed piece from the fringe
-        self.__closed_list.append(space)
-        del self.__fringe[(space[0], space[1])]
+          # Step 3: Updated Closed List & Respace
+          # placed piece from the fringe
+          self.__closed_list.append(space)
+          del self.__fringe[(space[0], space[1])]
 
-        # Step 4: Update Fringe
-        for x in range(space[0]-1, space[0]+2):
-            for y in range(space[1]-1, space[1]+2):
-                if 0 <= x < len(self.__board) and 0 <= y < len(self.__board) and (x, y) not in self.__fringe and (x, y) not in self.__closed_list:
-                    self.__fringe[(x, y)] = True
-                    self.set_space((x,y), '#')
+          # Step 4: Update Fringe
+          for x in range(space[0]-1, space[0]+2):
+              for y in range(space[1]-1, space[1]+2):
+                  if 0 <= x < len(self.__board) and 0 <= y < len(self.__board) and (x, y) not in self.__fringe and (x, y) not in self.__closed_list:
+                      self.__fringe[(x, y)] = True
+                      self.set_space((x,y), '#')
+
+        else:
+          print("Error Invalid move please provide valid move")
+          row = int(input("Row:"))
+          col = int(input("Col:"))
+          self.play_move((row, col), color)
 
   # creates an instence of the board where the move has been played
   def make_move(self, space, color):
@@ -336,21 +349,26 @@ class Board:
     return ret
 
 
-def minMax(board, depth, Color = "W", action = None, alpha = [None, -9999999], beta = [None, 99999999]):
+def minMax(board, depth, Player = True, alpha = [None, -9999999], beta = [None, 99999999]):
   if depth == 0: # or whiteBoard & blackBoard = 2^size*size
-    if Color == "W":
-      return (action, board.score("W"))
+    if Player:
+      w = board.score("W")
+      print("white:", w)
+      return (None, w)
     else:
-      return (action, board.score("B"))
-  if Color == "W":
+      b = board.score("B")
+      print("Black:", b)
+      return (None, b)
+    
+  if Player: # Max
     maximum = -99999999
     maximum_action = None
     for move in board.get_moves("W"):
       new_board = board.make_move(move, "W")
-      action, value = minMax(new_board, depth-1, "B", move, alpha, beta)
+      action, value = minMax(new_board, depth-1, False, alpha, beta)
       if value > maximum:
           maximum = value
-          maximum_action = move
+          maximum_action = [move, action]
       if maximum > alpha[1]:
           alpha[1] = maximum
           alpha[0] = maximum_action
@@ -358,16 +376,16 @@ def minMax(board, depth, Color = "W", action = None, alpha = [None, -9999999], b
         break
     return (maximum_action, maximum)
   
-  else:
+  else: # Min
     minimum = 9999999999
     minimum_action = None
     for move in board.get_moves("B"):
       new_board = board.make_move(move, "B")
-      action, value = minMax(new_board, depth-1, "W", move, alpha, beta)
+      action, value = minMax(new_board, depth-1, True, alpha, beta)
       if value < minimum:
         minimum = value
-        minimum_action = move
-      if minimum > beta[1]:
+        minimum_action = [move, action]
+      if minimum < beta[1]:
         beta[1] = minimum
         beta[0] = minimum_action
       if beta[1] <= alpha[1]:
@@ -377,6 +395,7 @@ def minMax(board, depth, Color = "W", action = None, alpha = [None, -9999999], b
 
 if __name__ == "__main__":
   # a = Board()
+  # a.play_move((2, 1), "W")
   # print(a)
   # print(a.is_occupied((2, 2)))
 
@@ -391,17 +410,52 @@ if __name__ == "__main__":
   # score = a.score()
   # print("White Score:", score[0])
   # print("Black Score:", score[1])
+  
+  
+  n = int(input("Size: "))
+  a = Board(n)
+  player = input("Player:")
 
-  a = Board(6)
-  b = a.make_move((3,4), "B")
-  print("a:\n", a)
-  print(a.get_moves('W'))
-  print("White Score:", a.score('W'))
-  print("Black Score:", a.score('B'))
-  print("\nb:\n", b)
-  print(b.get_moves('W'))
-  print("White Score:", b.score("W"))
-  print("Black Score:", b.score("B"))
-
-  print(minMax(b, 4, "W"))
-  print(minMax(b, 4, "B"))
+  while(True):
+    print("_____________________White Turn_________________")
+    print(a)
+    if player in ['W', 'w', 'White', 'white']:
+      print(a.score("W"), a.score("B"))
+      moves = a.get_moves("W")
+      print(moves)
+      if moves == {}:
+        pass
+      row = int(input("row: "))
+      col = int(input("col: "))
+      a.play_move((row, col), "W")
+    else:
+      print(a.score("W"), a.score("B"))
+      moves = a.get_moves("W")
+      print(moves)
+      if moves == {}:
+        pass
+      actions, score = minMax(a, 4)
+      print(actions, score) 
+      print(actions[0]) 
+      a.play_move((actions[0][0], actions[0][1]), "W")
+    print("_____________________Black Turn_________________")
+    print(a)
+    if player in ['B', 'b', 'Black', 'black']:
+      print(a.score("W"), a.score("B"))
+      moves = a.get_moves("B")
+      print(moves)
+      if moves == {}:
+        pass
+      row = int(input("row: "))
+      col = int(input("col: "))
+      a.set_space((row, col,), "B")
+    else:
+      print(a.score("W"), a.score("B"))
+      moves = a.get_moves("B")
+      print(moves)
+      if moves == {}:
+        pass
+      actions, score = minMax(a, 4, False)
+      print(actions, score)
+      print(actions[0]) 
+      a.play_move((actions[0][0], actions[0][1]), "B")

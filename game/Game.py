@@ -51,7 +51,7 @@ class Game:
 
 if __name__ == '__main__':
     print("Testing Game.py...")
-    game = Game(4)
+    game = Game(6)
     game.play_game()
     
     
