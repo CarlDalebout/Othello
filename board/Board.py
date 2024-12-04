@@ -81,6 +81,9 @@ class Board:
     elif color == 'B':
       opponentBoard = self.whiteBoard
 
+    is_valid = False
+    pieces_to_flip = []
+
     #print("Checking validity...")
     # Check each direction for a valid move
     for direction in [
@@ -93,13 +96,12 @@ class Board:
       (0, -1),   # West
       (-1, -1)   # Northwest
     ]:
-      #print("Checking direction: ", direction)
       i, j = space
       i += direction[0]
       j += direction[1]
 
       found_opponent = False
-      pieces_to_flip = []
+      pieces_to_flip_temp = []
 
       # Traverse in the given direction
       #print(0 <= i < self.__size, 0 <= j < self.__size)
@@ -108,12 +110,15 @@ class Board:
         # check if the space is an opponent's piece
         if opponentBoard.is_occupied((i, j)):
           found_opponent = True
-          pieces_to_flip.append((i, j))
+          pieces_to_flip_temp.append((i, j))
         elif currentBoard.is_occupied((i, j)):
           # given that we've already found the opponent, then
           # the prescence of our piece means this move is valid
           if found_opponent:
-            return (True, pieces_to_flip)
+            for s in pieces_to_flip_temp:
+              pieces_to_flip.append(s)
+            is_valid = True
+            break
           # if we found our piece in the current direction,
           # but we have not found an enemy piece yet, then
           # there is no valid capture in this direction, so
@@ -128,13 +133,17 @@ class Board:
         i += direction[0]
         j += direction[1]
 
-    # if no valid capture was found, then return False by default
-    return (False, None)
+    if is_valid:
+      return (True, pieces_to_flip)
+    else:
+      # if no valid capture was found, then return False by default
+      return (False, None)
 
   def duplicate(self):
     return Board(self.__size, self.fringe.copy(), self.closed_list.copy(), self.whiteBoard.duplicate(), self.blackBoard.duplicate(), True)
 
   # generates a list of actions
+  # move1, move2, move3, etc.
   def actions(self, player):
     valid_moves = {}
     for move in self.fringe.keys():
@@ -146,7 +155,9 @@ class Board:
     return valid_moves
   
   # generates list of available actions states
+  # (move1, result_state1), (move2, result_state2), ...
   def successors(self, player):
+    s = []
 
     # generate successor board state for each valid action
     for move in self.fringe.keys():
@@ -184,7 +195,9 @@ class Board:
             board.fringe[(x, y)] = True
 
       # Step 7: Yield Board State
-      yield board
+      s.append((move, board))
+    return s
+      
 
   def flip_piece(self, space):
     if self.blackBoard.is_occupied(space):

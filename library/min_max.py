@@ -1,8 +1,5 @@
 # File : min_max.py
 
-import Board as Board
-
-
 # TODO:
 # Generate terminal_values dictionary from terminal search nodes in search tree
 # the terminal_test(s) method should be defined in AI.py file
@@ -16,7 +13,7 @@ def successors(s):
         's2' : [('a4', 's5'), ('a5', 's6'), ('a6', 's7')],
         's3' : [('a7', 's8'), ('a8', 's9'), ('a9', 's10')],
         's4' : [('a10', 's11'), ('a11', 's12'), ('a12', 's13')],
-        's5' : [('a13', 's14'), ('a14', 's15'), ('a15', 's16')]
+        #'s5' : [('a13', 's14'), ('a14', 's15'), ('a15', 's16')]
     }
     d1 = dict([("s%s" % _, []) for _ in range(5, 14)])
     d.update(d1)
@@ -117,73 +114,8 @@ def abmm(s, player, minMax=None):
 # merge alpha and beta into minMax
 # 
 
-def minMax(board, depth, alpha = -9999999, beta = 99999999, player = True):
-  if depth == 0 or (board.whiteboard & board.blackboard) == 2: # or whiteBoard & blackBoard = 2^size*size
-    return board.eval()
-  if player:
-    maxEval = -999999999
-    for move in board.getmoves("W"):
-      eval = minMax(move, depth-1, alpha, beta, False)
-      maxEval = max(maxEval, eval)
-      alpha = max(alpha, eval)
-      if beta <= alpha:
-        break
-    return maxEval
-  
-  else:
-    minEval = 999999999
-    for move in board.getmoves("B"):
-      eval = minMax(move, depth-1, alpha, beta, True)
-      minEval = min(minEval, eval)
-      beta = min(beta, eval)
-      if beta <= alpha:
-        break
-    return minEval
-
 if __name__ == '__main__':
     # test min-max with alpha-beta pruning algorithm
     ret = abmm('s1', "MAX")
     print(ret)
 
-
-
-
-'''def abmm(s, player, alpha = [None, -999999], beta = [None, 999999]):
-  if termial_test(s):
-    return(None, termial_value(s))
-  
-  # block for when the player is max returning the best a
-  elif player in ['MAX', 'Max', 'max']:
-    maximum = -99999999
-    maximum_action = None
-    for action, state in successors(s):
-      action_value = abmm(state, "Min", alpha, beta)
-      a, v = action_value
-      if v > maximum:
-          maximum = v
-          maximum_action = [action, a]
-      if maximum > alpha[1]:
-          alpha[1] = maximum
-          alpha[0] = maximum_action
-
-      if beta[1] <= alpha[1]:
-        # print('skipping past', state)
-        break
-    return (maximum_action, maximum)
-  
-  else:
-    minimum = 99999999
-    minimum_action = None
-    for action , state in successors(s):
-      action_value = abmm(state, "Max", alpha, beta)
-      a, v = action_value
-      if minimum == None or v < minimum:
-        minimum = v
-        minimum_action = [action, a]
-      if minimum > beta[1]:
-        beta[1] = minimum
-        beta[0] = minimum_action
-      if beta[1] <= alpha[1]:
-        # print('skipping past', state)
-        break
-    return (minimum_action, minimum)'''

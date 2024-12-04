@@ -21,6 +21,7 @@ class Game:
         self.__currentPlayer = 'B'
         self.black = Player(self.board, 'B')
         self.white = AI(self.board, 'W')
+        self.time_left = 6
 
     def current_player(self):
         return self.__currentPlayer
@@ -32,12 +33,13 @@ class Game:
         if self.__currentPlayer == 'B':
             print("-----Black's Turn-----")
             move = self.black.get_move()
+            print("Move: ", move)
             self.black.play_move(move)
             self.__currentPlayer = 'W'
         else:
             print("-----White's Turn-----")
-            move = self.white.get_move_(2)
-            print(move)
+            move = self.white.get_move(self.time_left)
+            print("Move: ", move)
             self.white.play_move(move)
             self.__currentPlayer = 'B'
 

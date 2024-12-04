@@ -18,6 +18,14 @@ class ColorBoard:
     # initalize bit array to represent the sizexsize color board
     self.__board = [bitstring.BitArray(int=0, length=self.__size) for s in range(self.__size)]
 
+  def getSpaces(self):
+    i = 0
+    for row in self.__board:
+      j = 0
+      for val in row:
+        yield ((i, j), val)
+        j += 1
+      i += 1
     
   def duplicate(self):
     new_board = ColorBoard(self.__size)
