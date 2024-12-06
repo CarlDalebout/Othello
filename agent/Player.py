@@ -7,7 +7,8 @@ class Player(Agent):
     def __init__(self, board, color):
         Agent.__init__(self, board, color)
 
-    def get_move(self):
+    # don't do anything with time_left...
+    def get_move(self, time_left):
         row = int(input("row: "))
         col = int(input("col: "))
 

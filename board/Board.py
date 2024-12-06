@@ -8,44 +8,47 @@ import sys
 from ColorBoard import ColorBoard
 sys.path.append('..')
 import GLOBALS as g
+import copy
 
 class Board:
-  def __init__(self, size=6, fringe={}, closed_list=[], whiteBoard=None,blackBoard=None,copy=False):  
+  def __init__(self, size=6, fringe={}, closed_list=[], whiteBoard=None,blackBoard=None):  
     self.__size = int(size)
-    if copy:
-      self.whiteBoard = whiteBoard
-      self.blackBoard = blackBoard
-      self.fringe = fringe
-      self.closed_list = closed_list
-    else:
-      self.whiteBoard = ColorBoard(self.__size)
-      self.blackBoard = ColorBoard(self.__size)
-
-      # set top left starting block for white
-      self.whiteBoard.set_space((size // 2 - 1, size // 2 - 1), 1)
-      # set bottom right starting block for white
-      self.whiteBoard.set_space((size // 2, size // 2), 1)
-      
-      # set top right starting block for black
-      self.blackBoard.set_space((size // 2 - 1, size // 2), 1)
-      # set bottom left starting block for black
-      self.blackBoard.set_space((size // 2, size // 2 - 1), 1)
-
-      # keeps track of fringe (edges) around the pieces
-      n = size
-      self.closed_list = [
-        (n // 2 - 1, n // 2 - 1),
-        (n // 2, n // 2 - 1),
-        (n // 2 - 1, n // 2),
-        (n // 2, n // 2)
-      ]
-      self.fringe = {}
-      x0 = y0 = n // 2 - 1
-      for x in range(0, n):
-        for y in range(0, n):
-          if x >= x0-1 and x < x0+3 and y >= y0-1 and y < y0+3 and (x, y) not in closed_list:
-            self.fringe[(x, y)] = True
-
+    self.whiteBoard = ColorBoard(self.__size)
+    self.blackBoard = ColorBoard(self.__size)
+    
+    # set top left starting block for white
+    self.whiteBoard.set_space((size // 2 - 1, size // 2 - 1), 1)
+    # set bottom right starting block for white
+    self.whiteBoard.set_space((size // 2, size // 2), 1)
+    
+    # set top right starting block for black
+    self.blackBoard.set_space((size // 2 - 1, size // 2), 1)
+    # set bottom left starting block for black
+    self.blackBoard.set_space((size // 2, size // 2 - 1), 1)
+    
+    # keeps track of fringe (edges) around the pieces
+    n = size
+    # center squares
+    s1, s2, s3, s4 = (
+      (n // 2 - 1, n // 2 - 1),
+      (n // 2, n // 2 - 1),
+      (n // 2 - 1, n // 2),
+      (n // 2, n // 2)
+    )
+    self.closed_list = [s1, s2, s3, s4]
+    self.fringe = {}
+    x0 = y0 = n // 2 - 1
+    for x in range(0, n):
+      for y in range(0, n):
+        if x >= x0-1 and x < x0+3 and y >= y0-1 and y < y0+3 and (x, y) not in closed_list:
+          self.fringe[(x, y)] = True
+    
+    # delete four center squares from the fringe
+    del self.fringe[s1]
+    del self.fringe[s2]
+    del self.fringe[s3]
+    del self.fringe[s4]
+          
   # checks if a space is available for playing
   def is_occupied(self, space):
     blackOccupied = self.blackBoard.is_occupied(space)
@@ -71,15 +74,8 @@ class Board:
     # so switch them to the current color
 
     # current player's board & opponent's board
-    if color == 'W':
-      currentBoard = self.whiteBoard 
-    elif color == 'B':
-      currentBoard = self.blackBoard
-    
-    if color == 'W':
-      opponentBoard = self.blackBoard
-    elif color == 'B':
-      opponentBoard = self.whiteBoard
+    currentBoard = self.whiteBoard if color == 'W' else self.blackBoard
+    opponentBoard = self.blackBoard if color == 'W' else self.whiteBoard
 
     is_valid = False
     pieces_to_flip = []
@@ -115,8 +111,7 @@ class Board:
           # given that we've already found the opponent, then
           # the prescence of our piece means this move is valid
           if found_opponent:
-            for s in pieces_to_flip_temp:
-              pieces_to_flip.append(s)
+            pieces_to_flip.extend(pieces_to_flip_temp)
             is_valid = True
             break
           # if we found our piece in the current direction,
@@ -140,8 +135,8 @@ class Board:
       return (False, None)
 
   def duplicate(self):
-    return Board(self.__size, self.fringe.copy(), self.closed_list.copy(), self.whiteBoard.duplicate(), self.blackBoard.duplicate(), True)
-
+    return copy.deepcopy(self)
+  
   # generates a list of actions
   # move1, move2, move3, etc.
   def actions(self, player):

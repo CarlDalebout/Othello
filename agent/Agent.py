@@ -10,7 +10,8 @@ class Agent:
     # get the move that the agent will perform
     # for Player, this will be by input()
     # for AI, this will be by its algorithm
-    def get_move(self):
+    # time_left is only used by AI
+    def get_move(self, time_left):
         raise NotImplementedError
 
     # Precondition: move has already been validated

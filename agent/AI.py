@@ -1,17 +1,11 @@
 # File : AI.py
 # Location: Othello/agent
 
-############# TODO LIST #############
-# [DONE] Built SearchNode.py (Othello/library)
-# [DONE] Merged minMax algorithms + added comments
-# [DONE] Board Methods (Generate Successors)
-# [TODO - Carl] Generate Search Tree (AI.py in AI.get_move())
-# [TODO -] Create State Class; used for convenience for storing board
-# [Done] Create heuristic_table (dictionary)
-# [Done] Finish AI.score() and AI.h()
-# [TODO -] Ginish AI.get_t() to generate terminal values for terminal nodes in search tree
-# [TODO -] Update MinMax to work with the generated searchtree and terminal values
-# [TODO -] Finish and test AI.get_move()
+# Techniques We Used
+# Heuristic Table for determining terminal values
+# Iterative Deepening (Time-Sensitive Heuristic)
+# Random first move (doesn't matter)
+# 
 
 from Agent import Agent
 import random
@@ -19,6 +13,16 @@ import sys
 sys.path.append('..')
 sys.path.append('../board')
 from Board import Board
+import resource
+
+def gettime():
+    rs = resource.getrusage(resource.RUSAGE_SELF)
+    return rs[0] + rs[1]
+
+class SearchNode:
+    def __init__(self, state, depth):
+        self.state = state
+        self.depth = depth
 
 # first heuristics table for a 10x10 board
 heuristic_table10x10 = [[100, -30,  8,  6,  2,  2,  6,  8, -30, 100],
@@ -61,6 +65,12 @@ class AI(Agent):
             self.h_table = heuristic_table10x10
 
 
+        # number of remaining moves needed
+        # used for time scheduling purposes
+        self.num_turns_left = (pow(len(board), 2) - 4) / 2
+        self.turns_taken = 0
+
+
     # return heuristic value for the given space
     def h(self, space):
         return self.h_table[space[0]][space[1]]
@@ -80,14 +90,7 @@ class AI(Agent):
         return s
 
     # customizes min max for othello
-    def min_max(self, timeLeft):
-        # using time left determine how far we should search
-        max_depth = 2
-        
-        class SearchNode:
-            def __init__(self, state, depth):
-                self.state = state
-                self.depth = depth
+    def min_max(self, max_depth):
 
         # s = search node (state, depth)
         # player = MIN/MAX
@@ -176,9 +179,46 @@ class AI(Agent):
     # timeLeft = total time left for playing game
     def get_move(self, time_left):
         print("AI is thinking...")
-        result = self.min_max(6)
-        self.pieces_to_flip = self.board.validate_move(result[0], self.color)[1]
-        return result[0]
+        # return none if board is full
+        if self.num_turns_left == 0:
+            return None
+        # make a random move on first move
+        # (only counts for black)
+        elif self.turns_taken == 0 and self.color == 'B':
+            cList = self.board.closed_list
+            s1, s2, s3, s4 = (cList[0], cList[2], cList[1], cList[3])
+            moves = [(s1[0]-1,s1[1]), (s1[0],s1[1]-1), (s4[0],s4[1]+1), (s4[0]+1, s4[1])]
+
+            choice = random.choice(moves)
+            self.pieces_to_flip = self.board.validate_move(choice, self.color)[1]
+            # we made a move!
+            self.num_turns_left -= 1
+            self.turns_taken += 1
+            return choice
+
+        # calculate how much time we can spend per turn on average
+        buffer_time = 0.15
+        time_per_turn = (time_left - buffer_time) / self.num_turns_left
+        #print("Time left: ", time_left)
+        #print("Turns Left: ", self.num_turns_left)
+        #print("Time to spend per turn: ", self.time_per_turn)
+
+        starttime = gettime()
+        threshold_time = 0.75 * time_per_turn # when to stop searching
+        for i in range(0, 5):
+            result = self.min_max(i)
+            currenttime = gettime()
+            if (currenttime - starttime > threshold_time):
+                break
+        
+        if result[0] != None:
+            self.pieces_to_flip = self.board.validate_move(result[0], self.color)[1]
+            # we made a move!
+            self.num_turns_left -= 1
+            self.turns_taken += 1
+            return result[0]
+        else:
+            return None
 
     # Random Brain AI
     '''def get_move(self):
@@ -205,5 +245,5 @@ if __name__ == "__main__":
     print("Testing AI.py...")
     board = Board(6)
     ai = AI(board, "W")
-
+    
     print(ai.score(board, "W", ai.h))

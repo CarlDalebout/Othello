@@ -10,8 +10,8 @@ print(t0)
 
 for i in range(100000):
     j = i * i * i
-    t1 = gettime()
 
+t1 = gettime()
 print(t1)
 print(t1 - t0)
 
