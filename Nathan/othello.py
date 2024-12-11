@@ -271,7 +271,6 @@ def get_actions(board, n, current_player):
     # All occupied spaces
     occupied = player_board | opponent_board
 
-    
     directions = ['W', 'E', 'N', 'S', 'NW', 'NE', 'SW', 'SE']
     
     # Initialize valid moves
@@ -520,6 +519,10 @@ def get_move(board_size, board_state, turn,
     # use iterative deepening until time runs out
     start_time = gettime()
     spent_time = 0
+
+    # replace get_succesosrs() with get_actions() and only generate new board state at each min/max iteration
+    #include means of storing previous itoration of search tree in static storage similer to fib storage.
+
     for MAX_DEPTH in range(1, 10):
         val = min_max(board, turn, H_TABLE, MAX_DEPTH)[0]
         end_time = gettime()
