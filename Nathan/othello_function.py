@@ -371,9 +371,6 @@ def get_actions(board, n, current_player):
         else:
             # Shift bits to the right for negative directions
             shifted = (opponent_board >> -direction) & ~RIGHT_MASK(-direction, n*n)
-
-        print("Testing shift: ", direction)
-        print(shifted)
     
         # Compute potential new moves
         potential_moves = shifted & ~occupied  # New positions must be unoccupied

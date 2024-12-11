@@ -17,13 +17,7 @@ from bitstring import BitArray
 import copy
 import random
 import resource
-
-######################################################
-# Global Constants
-######################################################
-MAX_DEPTH = 1
-COLOR = 'B'
-COLOR2 = 'W'
+import math
 
 ######################################################
 # Helper Functions
@@ -98,6 +92,38 @@ def extract_bits(bit_array):
             single_bit_array = BitArray(uint=1 << (len(bit_array) - index - 1), length=len(bit_array))
             extracted.append(single_bit_array)
     return extracted
+
+######################################################
+# Heuristic Tables
+######################################################
+heuristic_table10x10= [[100,   0,  8,  6,  2,  2,  6,  8,   0, 100],
+                       [  0,   0,  6,  1,  1,  1,  1,  6,   0,   0],
+                       [  8,   6,  1,  1,  1,  1,  1,  1,   6,   8],
+                       [  6,   1,  1,  1,  1,  1,  1,  1,   1,   6],
+                       [  2,   1,  1,  1,  3,  3,  1,  1,   1,   2],
+                       [  2,   1,  1,  1,  3,  3,  1,  1,   1,   2],
+                       [  6,   1,  1,  1,  1,  1,  1,  1,   1,   6],
+                       [  8,   6,  1,  1,  1,  1,  1,  1,   6,   8],
+                       [  0,   0,  1,  1,  1,  1,  1,  6,   0,   0],
+                       [100,   0,  8,  6,  2,  2,  6,  8,   0, 100]]
+
+# first heuristics table for a 8x8 board
+heuristic_table8x8 = [[100,   0,  6,  2,  2,  6,   0, 100],
+                      [  0,   0,  1,  1,  1,  1,   0,   0],
+                      [  6,   1,  1,  1,  1,  1,   1,   6],
+                      [  2,   1,  1,  3,  3,  1,   1,   2],
+                      [  2,   1,  1,  3,  3,  1,   1,   2],
+                      [  6,   1,  1,  1,  1,  1,   1,   6],
+                      [  0,   0,  1,  1,  1,  1,   0,   0],
+                      [100,   0,  6,  2,  2,  6,   0, 100]]
+
+# first heuristics table for a 6x6 board
+heuristic_table6x6 = [[100,   0,  6,  6,   0, 100],
+                      [  0,   0,  1,  1,   0,   0],
+                      [  6,   1,  3,  3,   1,   6],
+                      [  6,   1,  3,  3,   1,   6],
+                      [  0,   0,  1,  1,   0,   0],
+                      [100,   0,  6,  6,   0, 100]]
 
 ######################################################
 ######################################################
@@ -316,84 +342,132 @@ def get_successors(board, player):
 ######################################################
 ######################################################
 
+######################################################
+# Class: SearchNode
+# Used for generating min-max search tree
+######################################################
+class SearchNode:
+    def __init__(self, state, depth):
+        self.state = state
+        self.depth = depth
 
 ######################################################
-# Function: min-max algorithm + alpha-beta pruning
+# Function: h --> heuristic
 ######################################################
-def mm(s, player, color, H_TABLE, minMax=None):
-    # calculate successors
-    o_color = "W" if color == "B" else "B"
-    color = color if player == "MAX" else o_color
-    successors = get_successors(s.state, color)
+def h(space, H_TABLE):
+    return H_TABLE[space[0]][space[1]]
 
-    # TERMINAL TEST
-    # we reached max depth limit
-    # OR there are no child states
-    if (not (s.depth < MAX_DEPTH)) or len(successors) == 0:
-        # CALCULATE TERMINAL VALUE
-        terminal_value = score(s.state, COLOR, h, H_TABLE)
-        
-        return (None, terminal_value)
-    # ELIF do MAX
-    elif player == "MAX":
-        # initalized to small threshold ("infinitely small")
-        # change as needed
-        maxValue = -999999
-        # action used to get to the max value
-        # only important if this is initial call of mm()
-        maxAction = None
-                
-        # determine MAX of the values at the next level
-        # if they are not terminal values, use MIN to determine
-        # values for next layer's nodes
-        for action,state in successors:
-            # keep track of action used to get successor state
-            a = action
-            # pass current maxValue into minMax to use for
-            # alpha-beta pruning at the next layer
-            # returns value to check for current MAX layer
-            new_node = SearchNode(state=state, depth=s.depth+1)
-            
-            v = mm(new_node, "MIN", color, H_TABLE, maxValue)[1]
-            
-            # update current layer's MAX value
-            if v > maxValue:
-                maxValue = v
-                maxAction = a
-                
-            # perform alpha-beta pruning
-            if minMax != None and v > minMax:
-                break
-                
-        return (maxAction, maxValue)
-    # ELSE do MIN
+######################################################
+# Function: score
+# Calculates a score for a player based on a given
+# board state
+######################################################
+def score(state, color, h, H_TABLE):
+    n = state.get_size()
+    s = 0
+    
+    if color == 'W':
+        for idx,bit in enumerate(state.white_board):
+            i = idx // n
+            j = idx % n
+            if bit == 1: s += h((i, j), H_TABLE)
     else:
-        # initalized to large threshold ("infinitely large")
-        # change as needed
-        minValue = 999999
-        # action used to get the min value
-        # only important if this is initial call of mm()
-        minAction = None
+        for idx,bit in enumerate(state.black_board):
+            i = idx // n
+            j = idx % n
+            if bit == 1: s += h((i, j), H_TABLE)
+            
+    return s
+
+######################################################
+# Function: min_max
+# Creates a custom min_max algorithm for the
+# othello problem
+######################################################
+def min_max(BOARD, COLOR, H_TABLE, MAX_DEPTH):
+    def mm(s, player, minMax=None):
+        # calculate successors
+        o_color = "W" if COLOR == "B" else "B"
+        color = COLOR if player == "MAX" else o_color
+        successors = get_successors(s.state, COLOR)
+
+        # TERMINAL TEST
+        # we reached max depth limit
+        # OR there are no child states
+        if (not (s.depth < MAX_DEPTH)) or len(successors) == 0:
+            # CALCULATE TERMINAL VALUE
+            if len(successors) == 0:
+                # this accounts for scenarios where the player
+                # wants to avoid making moves that would make them
+                # lose because they can't make moves later on
+                terminal_value = -99999 if player == "MAX" else 99999
+            else:
+                terminal_value = score(s.state, COLOR, h, H_TABLE)
         
-        # determine MIN of the values at the next level in tree
-        # if they are not terminal values, use MAX to determine
-        # values for the next layer's nodes
-        for action,state in successors:
-            a = action
-            new_node = SearchNode(state=state, depth=s.depth+1)
-            v = mm(new_node, "MAX", color, H_TABLE, minValue)[1]
+            return (None, terminal_value)
+        # ELIF do MAX
+        elif player == "MAX":
+            # initalized to small threshold ("infinitely small")
+            # change as needed
+            maxValue = -999999
+            # action used to get to the max value
+            # only important if this is initial call of mm()
+            maxAction = None
             
-            
-            # update current layer's MIN value
-            if v < minValue:
-                minValue = v
-                minAction = a
+            # determine MAX of the values at the next level
+            # if they are not terminal values, use MIN to determine
+            # values for next layer's nodes
+            for action,state in successors:
+                # keep track of action used to get successor state
+                a = action
+                # pass current maxValue into minMax to use for
+                # alpha-beta pruning at the next layer
+                # returns value to check for current MAX layer
+                new_node = SearchNode(state=state, depth=s.depth+1)
                 
-            # perform alpha-beta pruning
-            if minMax != None and v < minMax:
-                break
+                v = mm(new_node, "MIN", maxValue)[1]
+                
+                # update current layer's MAX value
+                if v > maxValue:
+                    maxValue = v
+                    maxAction = a
+                
+                # perform alpha-beta pruning
+                if minMax != None and v > minMax:
+                    break
+                
+            return (maxAction, maxValue)
+        # ELSE do MIN
+        else:
+            # initalized to large threshold ("infinitely large")
+            # change as needed
+            minValue = 999999
+            # action used to get the min value
+            # only important if this is initial call of mm()
+            minAction = None
+        
+            # determine MIN of the values at the next level in tree
+            # if they are not terminal values, use MAX to determine
+            # values for the next layer's nodes
+            for action,state in successors:
+                a = action
+                new_node = SearchNode(state=state, depth=s.depth+1)
+                v = mm(new_node, "MAX", minValue)[1]
+                
+                
+                # update current layer's MIN value
+                if v < minValue:
+                    minValue = v
+                    minAction = a
                     
-        return (minAction, minValue)
+                # perform alpha-beta pruning
+                if minMax != None and v < minMax:
+                    break
+                    
+            return (minAction, minValue)
+        
+    # return customized min max algorithm
+    return mm(SearchNode(state=BOARD, depth=0), "MAX")
 
 
 ######################################################
@@ -405,41 +479,59 @@ def mm(s, player, color, H_TABLE, minMax=None):
 ######################################################
 def get_move(board_size, board_state, turn,
              time_left, opponent_time_left):
-    # define heuristic table based on board size
+    
+    # 1. Define heuristic table based on board size
     if board_size == 6:
         H_TABLE = heuristic_table6x6
     elif board_size == 8:
         H_TABLE = heuristic_table8x8
     elif board_size == 10:
         H_TABLE = heuristic_table10x10
-    # create bitboards from board state
+        
+    # 2. Create bitboards from board state
     ns = board_size * board_size # n-squared
     white_board = BitArray(length=ns)
     black_board = BitArray(length=ns)
+    total_moves = 0
     
     for row_idx, row in enumerate(board_state):
         for col_idx, item in enumerate(row):
             if item == 'W':
                 white_board[row_idx*board_size + col_idx] = 1
+                total_moves += 1
             elif item == 'B':
-                black_board[row_idx*board_size + col_idx] = 1                
+                black_board[row_idx*board_size + col_idx] = 1
+                total_moves += 1
     
-    # Create Board from bit boards
+    # 3. Create board from color bit boards
     board = Board(size=board_size, white_board=white_board, black_board=black_board)
-    
-    # Determine Move:
-    val = mm(SearchNode(board, 0), "MAX", turn, H_TABLE)[0]
-    if val == None:
-        print("TESTING ERROR: ")
-        print("Testing actions: ")
-        actions = get_actions(board, board_size, turn)
-        for a in actions:
-            print(a)
-        print("Testing successors: ")
-        successors = get_successors(board, turn)
-        for s in successors:
-            print_board(s, s.get_size())
-    row,col = bit_to_tuple(val, board_size)
 
-    # Return Move:
-    return (row, col)
+    # 4. Determine Time for Turn
+    turns_to_take = math.ceil((ns - total_moves) / 2)
+    if turns_to_take == 0:
+        return None
+    # leave some extra buffer time
+    buffer_time = time_left * 0.2
+    # multiply by 0.8 to give a little buffer per turn as well,
+    # because iterative deepening will often cause overflow
+    time_per_turn = ((time_left - buffer_time) / turns_to_take) * 0.75
+
+    # 5. Determine move
+    # use iterative deepening until time runs out
+    start_time = gettime()
+    spent_time = 0
+    for MAX_DEPTH in range(1, 10):
+        val = min_max(board, turn, H_TABLE, MAX_DEPTH)[0]
+        end_time = gettime()
+        spent_time = end_time - start_time
+        if spent_time > time_per_turn:
+            break
+        
+    
+    if val == None:
+        return None
+    else:   
+        row,col = bit_to_tuple(val, board_size)
+        # IMPORTANT! CHANGE FOR SUBSMISSION TO THE FOLLOWING:
+        # return (row, col)
+        return ((row, col), time_left - spent_time)
