@@ -388,20 +388,22 @@ def min_max(BOARD, COLOR, H_TABLE, MAX_DEPTH):
         # calculate successors
         o_color = "W" if COLOR == "B" else "B"
         color = COLOR if player == "MAX" else o_color
-        successors = get_successors(s.state, COLOR)
+        n = s.state.get_size()
+        board = s.state
+        actions = get_actions(board, n, color)
 
         # TERMINAL TEST
         # we reached max depth limit
         # OR there are no child states
-        if (not (s.depth < MAX_DEPTH)) or len(successors) == 0:
+        if (not (s.depth < MAX_DEPTH)) or len(actions) == 0:
             # CALCULATE TERMINAL VALUE
-            if len(successors) == 0:
+            if len(actions) == 0:
                 # this accounts for scenarios where the player
                 # wants to avoid making moves that would make them
                 # lose because they can't make moves later on
                 terminal_value = -99999 if player == "MAX" else 99999
             else:
-                terminal_value = score(s.state, COLOR, h, H_TABLE)
+                terminal_value = score(s.state, color, h, H_TABLE)
         
             return (None, terminal_value)
         # ELIF do MAX
@@ -416,9 +418,9 @@ def min_max(BOARD, COLOR, H_TABLE, MAX_DEPTH):
             # determine MAX of the values at the next level
             # if they are not terminal values, use MIN to determine
             # values for next layer's nodes
-            for action,state in successors:
-                # keep track of action used to get successor state
-                a = action
+            for action in actions:
+                state = perform_action(board, n, color, action)
+                    
                 # pass current maxValue into minMax to use for
                 # alpha-beta pruning at the next layer
                 # returns value to check for current MAX layer
@@ -429,7 +431,7 @@ def min_max(BOARD, COLOR, H_TABLE, MAX_DEPTH):
                 # update current layer's MAX value
                 if v > maxValue:
                     maxValue = v
-                    maxAction = a
+                    maxAction = action
                 
                 # perform alpha-beta pruning
                 if minMax != None and v > minMax:
@@ -448,16 +450,15 @@ def min_max(BOARD, COLOR, H_TABLE, MAX_DEPTH):
             # determine MIN of the values at the next level in tree
             # if they are not terminal values, use MAX to determine
             # values for the next layer's nodes
-            for action,state in successors:
-                a = action
+            for action in actions:
+                state = perform_action(board, n, color, action)
                 new_node = SearchNode(state=state, depth=s.depth+1)
                 v = mm(new_node, "MAX", minValue)[1]
-                
                 
                 # update current layer's MIN value
                 if v < minValue:
                     minValue = v
-                    minAction = a
+                    minAction = action
                     
                 # perform alpha-beta pruning
                 if minMax != None and v < minMax:
