@@ -227,8 +227,15 @@ if __name__ == '__main__':
         board = Board(size=n, white_board=white_board, black_board=black_board)
 
         # initalize players' time
-        player_black_time = 6
-        player_white_time = 6
+        if n == 6:
+            player_black_time = 6
+            player_white_time = 6
+        elif n == 8:
+            player_black_time = 10
+            player_white_time = 10
+        elif n == 10:
+            player_black_time = 15
+            player_white_time = 15
 
         # play game
         turn = 'B'
