@@ -164,6 +164,11 @@ class Board:
     
     def __len__(self):
         return self.__size * self.__size
+
+    # Combine size and serialized boards into a hashable integer
+    def to_key(self):
+        return int(self.__white_board.bin, 2) + int(self.__black_board.bin, 2)
+
     
 ######################################################
 # Function: is_valid_move
@@ -346,9 +351,16 @@ def get_successors(board, player):
 # Used for generating min-max search tree
 ######################################################
 class SearchNode:
-    def __init__(self, state, depth):
+    def __init__(self, state, depth, actions=[], children={}):
         self.state = state
         self.depth = depth
+        # lists possible actions
+        self.actions = actions
+        # points to index of parent
+        self.parent = None
+        # points to indices of children
+        # self.children[action] = state
+        self.children = children
 
 ######################################################
 # Function: h --> heuristic
@@ -383,14 +395,28 @@ def score(state, color, h, H_TABLE):
 # Creates a custom min_max algorithm for the
 # othello problem
 ######################################################
-def min_max(BOARD, COLOR, H_TABLE, MAX_DEPTH):
+def min_max(BOARD, COLOR, H_TABLE, MAX_DEPTH, INFO):
     def mm(s, player, minMax=None):
         # calculate successors
         o_color = "W" if COLOR == "B" else "B"
         color = COLOR if player == "MAX" else o_color
         n = s.state.get_size()
         board = s.state
-        actions = get_actions(board, n, color)
+
+        # check if we have info for this node
+        key = s.state.to_key()
+        if key in INFO:
+            s.actions = INFO[key].actions
+            s.children = INFO[key].children
+        else:
+            s.actions = get_actions(board, n, color)
+            INFO[key] = s # store search node in INFO
+            
+        
+        if len(s.actions) > 0:
+            actions = s.actions
+        else:
+            actions = get_actions(board, n, color)
 
         # TERMINAL TEST
         # we reached max depth limit
@@ -419,7 +445,12 @@ def min_max(BOARD, COLOR, H_TABLE, MAX_DEPTH):
             # if they are not terminal values, use MIN to determine
             # values for next layer's nodes
             for action in actions:
-                state = perform_action(board, n, color, action)
+                tuple_action = bit_to_tuple(action, n)
+                if tuple_action in s.children:
+                    state = s.children[tuple_action]
+                else:
+                    state = perform_action(board, n, color, action)
+                    INFO[key].children[tuple_action] = state
                     
                 # pass current maxValue into minMax to use for
                 # alpha-beta pruning at the next layer
@@ -451,7 +482,12 @@ def min_max(BOARD, COLOR, H_TABLE, MAX_DEPTH):
             # if they are not terminal values, use MAX to determine
             # values for the next layer's nodes
             for action in actions:
-                state = perform_action(board, n, color, action)
+                tuple_action = bit_to_tuple(action, n)
+                if tuple_action in s.children:
+                    state = s.children[tuple_action]
+                else:
+                    state = perform_action(board, n, color, action)
+                    INFO[key].children[tuple_action] = state
                 new_node = SearchNode(state=state, depth=s.depth+1)
                 v = mm(new_node, "MAX", minValue)[1]
                 
@@ -524,8 +560,10 @@ def get_move(board_size, board_state, turn,
     # replace get_succesosrs() with get_actions() and only generate new board state at each min/max iteration
     #include means of storing previous itoration of search tree in static storage similer to fib storage.
 
+    INFO = {}
+
     for MAX_DEPTH in range(1, 10):
-        val = min_max(board, turn, H_TABLE, MAX_DEPTH)[0]
+        val = min_max(board, turn, H_TABLE, MAX_DEPTH, INFO)[0]
         end_time = gettime()
         spent_time = end_time - start_time
         if spent_time > time_per_turn:
