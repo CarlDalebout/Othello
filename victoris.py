@@ -556,11 +556,11 @@ def get_move(board_size, board_state, turn,
     # replace get_succesosrs() with get_actions() and only generate new board state at each min/max iteration
     #include means of storing previous itoration of search tree in static storage similer to fib storage.
 
-    for MAX_DEPTH in range(1, 6):
+    for MAX_DEPTH in range(3, 7):
         val = min_max(board, turn, H_TABLE, MAX_DEPTH)[0]
         end_time = gettime()
         spent_time = end_time - start_time
-        if spent_time > time_per_turn or total_moves == 4:
+        if spent_time > time_per_turn or total_moves < 8:
             break
         
     
@@ -568,6 +568,4 @@ def get_move(board_size, board_state, turn,
         return None
     else:   
         row,col = bit_to_tuple(val, board_size)
-        # IMPORTANT! CHANGE FOR SUBSMISSION TO THE FOLLOWING:
-        # return (row, col)
-        return ((row, col), (time_left - spent_time) * 1000)
+        return (row, col)

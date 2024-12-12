@@ -228,14 +228,14 @@ if __name__ == '__main__':
 
         # initalize players' time
         if n == 6:
-            player_black_time = 6
-            player_white_time = 6
+            player_black_time = 180000
+            player_white_time = 180000
         elif n == 8:
-            player_black_time = 10
-            player_white_time = 10
+            player_black_time = 180000
+            player_white_time = 180000
         elif n == 10:
-            player_black_time = 16
-            player_white_time = 16
+            player_black_time = 180000
+            player_white_time = 180000
             
 
         # play game
@@ -250,7 +250,7 @@ if __name__ == '__main__':
                 else:
                     player_white_time = flag
                 turn = 'B' if turn == 'W' else 'W'
-                print("Remaining Time: ", player_black_time, player_white_time)
+                print("Remaining Time: ", player_black_time/1000, player_white_time/1000)
             else:
                 break
 

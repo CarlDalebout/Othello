@@ -3,7 +3,7 @@
 #
 # your alex user code is in ~/.alex/alex
 # 
-user = 'put-your-alex-user-code-here'
+user = '2qrxKCJbiGAasgardianKNHQaL67iwlA'
 
 LOOP = True
 T = MIN_T = 5 * 60 # once every 5 minutes
